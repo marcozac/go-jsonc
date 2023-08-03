@@ -1,0 +1,14 @@
+root = true
+
+[*]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+
+[{*.go,go.mod,go.sum,*.tmpl}]
+indent_style = tab
+indent_size = 8
+
+[*.{yml,yaml}]
+quote_type = single

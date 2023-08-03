@@ -1,0 +1,34 @@
+* text=auto
+
+# Documents
+*.md            text diff=markdown
+*.txt           text
+AUTHORS         text
+CHANGELOG       text
+CHANGES         text
+CONTRIBUTING    text
+LICENSE         text
+
+# Serialisation
+*.json    text
+*.yml     text
+*.yaml    text
+
+# Scripts
+*.sh    text eol=lf
+
+# Go
+# See https://github.com/golang/go/blob/master/.gitattributes
+*.go        -text diff=golang
+go.sum      linguist-generated
+vendor/**   linguist-vendored
+
+# Templates
+*.tmpl            text
+*.tpl             text
+
+# Misc
+.editorconfig     text export-ignore
+.gitattributes    text export-ignore
+.gitignore        text export-ignore
+.gitkeep          text export-ignore
