@@ -13,6 +13,9 @@ cover.*
 *.test
 go.work*
 
+# GoReleaser
+dist/
+
 # IDE
 .idea/
 .vscode/*
