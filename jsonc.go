@@ -16,6 +16,7 @@ package jsonc
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"unicode/utf8"
 )
@@ -88,4 +89,31 @@ func sanitize(data []byte) []byte {
 		}
 		return r
 	}, data)
+}
+
+// Unmarshal parses the JSONC-encoded data and stores the result in the value
+// pointed by v using the standard json package. If the data contains
+// comments, they will be removed before unmarshaling.
+//
+// To improve performance, it calls [Sanitize] only if the data contains at
+// least one '/' character, adding a small overhead to the unmarshaling
+// process if the data does not contain comments.
+//
+// If the data contains any '/' character, it is assumed to be not sanitized
+// and the function will return an error if the data is not valid UTF-8.
+// Otherwise, it is assumed to be already sanitized and does not check for
+// invalid UTF-8.
+//
+// Caveat: if the data contains a string that looks like a comment, for
+// example: {"url": "http://example.com"}, Unmarshal calls [Sanitize] anyway,
+// even if the data does not contain any comment.
+func Unmarshal(data []byte, v any) error {
+	if bytes.ContainsRune(data, '/') {
+		var err error
+		data, err = Sanitize(data)
+		if err != nil {
+			return err
+		}
+	}
+	return json.Unmarshal(data, v)
 }
