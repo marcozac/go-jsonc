@@ -16,6 +16,10 @@ go.work*
 # GoReleaser
 dist/
 
+# Temporary files
+tmp/
+*.tmp
+
 # IDE
 .idea/
 .vscode/*
