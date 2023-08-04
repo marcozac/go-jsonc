@@ -1,0 +1,65 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+  test:
+    strategy:
+      matrix:
+        go: ['1.19', '1.20']
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Test & generate coverage report
+        run: go test -v -race ./... -coverpkg=./... -covermode=atomic -coverprofile=cover.out
+      - name: Upload coverage artifact
+        # Upload coverage only one time (ubuntu-latest + go 1.20)
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.20'
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage_report
+          path: cover.out
+          if-no-files-found: error
+          retention-days: 1
+
+  coverage:
+    if: github.actor != 'dependabot[bot]'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_report
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+          fail_ci_if_error: true
