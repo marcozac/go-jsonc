@@ -1,0 +1,12 @@
+{
+  // comment
+  "foo": "bar // comment inside a string", // comment
+  /*
+  "hello": "world",
+  // a comment inside a comment block
+  */
+  "baz": "qux /* comment block inside a string */" /* comment */,
+      // comment
+  "hello": "world *//* /* // x */",
+  "x": null
+}
