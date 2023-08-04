@@ -15,12 +15,12 @@
 package jsonc
 
 import (
-	"encoding/json"
 	"reflect"
 	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/marcozac/go-jsonc/internal/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -36,6 +36,7 @@ var _invalidJsonc = []byte(`{
 }`)
 
 func TestSanitize(t *testing.T) {
+	t.Parallel()
 	for _, tt := range sanitizeTests {
 		tt := tt
 		name := runtime.FuncForPC(reflect.ValueOf(tt).Pointer()).Name()
@@ -81,7 +82,7 @@ func TestUnmarshal(t *testing.T) {
 	for _, tt := range unmarshalTests {
 		tt := tt
 		name := runtime.FuncForPC(reflect.ValueOf(tt).Pointer()).Name()
-		t.Run(name[strings.LastIndex(name, ".")+8:], func(t *testing.T) {
+		t.Run(name[strings.LastIndex(name, ".")+10:], func(t *testing.T) {
 			t.Parallel()
 			tt(t)
 		})
@@ -127,16 +128,25 @@ func BenchmarkUnmarshal(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalNoSlash(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		var j T
-		_ = Unmarshal(_jsonNoSlash, &j)
-	}
+func BenchmarkUnmarshalWithoutSlash(b *testing.B) {
+	b.Run("SkipSanitize", func(b *testing.B) {
+		benchmarkUnmarshaler(b, _jsonNoSlash, Unmarshal)
+	})
+	// Not a real benchmark, just for comparison with json.Unmarshal
+	// json.Unmarshal is faster because it doesn't sanitize the input.
+	//
+	// NOTE
+	// json.Unmarshal may come from the standard library, jsoniter
+	// or go-json depending on build tags.
+	b.Run("JSONUnmarshal", func(b *testing.B) {
+		benchmarkUnmarshaler(b, _jsonNoSlash, json.Unmarshal)
+	})
 }
 
-func BenchmarkStdUnmarshal(b *testing.B) {
+func benchmarkUnmarshaler(b *testing.B, data []byte, unmarshal func([]byte, any) error) {
+	b.Helper()
 	for n := 0; n < b.N; n++ {
 		var j T
-		_ = json.Unmarshal(_jsonNoSlash, &j)
+		_ = unmarshal(_jsonNoSlash, &j)
 	}
 }
