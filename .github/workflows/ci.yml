@@ -24,8 +24,14 @@ jobs:
   test:
     strategy:
       matrix:
-        go: ['1.19', '1.20']
         os: [ubuntu-latest]
+        go: ['1.19', '1.20']
+        build-tags:
+          - ''
+          - 'jsoniter'
+          - 'go_json'
+          # Check conflicting build tags
+          - 'jsoniter,go_json'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -35,10 +41,15 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Test & generate coverage report
-        run: go test -v -race ./... -coverpkg=./... -covermode=atomic -coverprofile=cover.out
+        run: >-
+          go test -v -race ./...
+          -tags="${{ matrix.build-tags }}"
+          -coverpkg=./...
+          -covermode=atomic
+          -coverprofile=cover.out
       - name: Upload coverage artifact
-        # Upload coverage only one time (ubuntu-latest + go 1.20)
-        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.20'
+        # Upload coverage only once (ubuntu-latest + go 1.20 + no build tags)
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.20' && matrix.build-tags == ''
         uses: actions/upload-artifact@v3
         with:
           name: coverage_report

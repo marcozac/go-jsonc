@@ -1,0 +1,6 @@
+{
+  "foo": "bar // comment inside a string",
+  "baz": "qux /* comment block inside a string */",
+  "hello": "world *//* /* // x */",
+  "x": null
+}

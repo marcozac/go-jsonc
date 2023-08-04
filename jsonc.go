@@ -18,18 +18,12 @@ import (
 	"bytes"
 	"errors"
 	"unicode/utf8"
+
+	"github.com/marcozac/go-jsonc/internal/json"
 )
 
 // ErrInvalidUTF8 is returned by Sanitize if the data is not valid UTF-8.
 var ErrInvalidUTF8 = errors.New("jsonc: invalid UTF-8")
-
-const (
-	_ byte = 1 << iota
-	_isString
-	_isCommentLine
-	_isCommentBlock
-	_checkNext
-)
 
 // Sanitize removes all comments from JSONC data.
 // It returns an error if the data is not valid UTF-8.
@@ -40,6 +34,14 @@ func Sanitize(data []byte) ([]byte, error) {
 	return sanitize(data), nil
 }
 
+const (
+	_ byte = 1 << iota
+	_isString
+	_isCommentLine
+	_isCommentBlock
+	_checkNext
+)
+
 func sanitize(data []byte) []byte {
 	var state byte
 	return bytes.Map(func(r rune) rune {
@@ -48,8 +50,15 @@ func sanitize(data []byte) []byte {
 		switch r {
 		case '\n':
 			state &^= _isCommentLine
+		case '\\':
+			if state&_isString != 0 {
+				state |= _checkNext
+			}
 		case '"':
 			if state&_isString != 0 {
+				if checkNext { // escaped quote
+					break // switch => write rune
+				}
 				state &^= _isString
 			} else if state&(_isCommentLine|_isCommentBlock) == 0 {
 				state |= _isString
@@ -88,4 +97,39 @@ func sanitize(data []byte) []byte {
 		}
 		return r
 	}, data)
+}
+
+// Unmarshal parses the JSONC-encoded data and stores the result in the value
+// pointed by v removing all comments from the data (if any).
+//
+// It uses the standard library by default, but can be configured to use the
+// jsoniter or go-json library instead by using build tags.
+//
+//	| tag           | library   |
+//	|---------------|-----------|
+//	| go_json	| go-json   |
+//	| jsoniter	| jsoniter  |
+//	| none or both	| standard  |
+//
+// If the data contains any '/' character, it is assumed to be not sanitized,
+// and [Sanitize] will be called before unmarshaling returning an error if the
+// data is not valid UTF-8.
+//
+// To improve performance, if the data does not contain any '/' character,
+// it is assumed to be sanitized, and [Sanitize] will not be called, adding
+// just a small overhead to the unmarshaling process if the data does not
+// contain comments.
+//
+// Caveat: if the data contains a string that looks like a comment, for
+// example: {"url": "http://example.com"}, Unmarshal calls [Sanitize] anyway,
+// even if the data does not contain any comment.
+func Unmarshal(data []byte, v any) error {
+	if bytes.ContainsRune(data, '/') {
+		var err error
+		data, err = Sanitize(data)
+		if err != nil {
+			return err
+		}
+	}
+	return json.Unmarshal(data, v)
 }

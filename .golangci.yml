@@ -10,6 +10,8 @@ linters-settings:
         deny:
           - pkg: "io/ioutil"
             desc: 'Deprecated: replace with "io" package'
+          - pkg: "encoding/json"
+            desc: 'Replace with "github.com/marcozac/go-jsonc/internal/json"'
   dupl:
     threshold: 200
   funlen:
@@ -64,3 +66,6 @@ issues:
         - funlen
         - gosec
         - gocritic
+        - stylecheck
+    - path: internal/json
+      text: "import 'encoding/json' is not allowed"
