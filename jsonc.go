@@ -50,8 +50,15 @@ func sanitize(data []byte) []byte {
 		switch r {
 		case '\n':
 			state &^= _isCommentLine
+		case '\\':
+			if state&_isString != 0 {
+				state |= _checkNext
+			}
 		case '"':
 			if state&_isString != 0 {
+				if checkNext { // escaped quote
+					break // switch => write rune
+				}
 				state &^= _isString
 			} else if state&(_isCommentLine|_isCommentBlock) == 0 {
 				state |= _isString
