@@ -1,0 +1,6 @@
+{
+  "foo": "bar xx comment inside a string",
+  "baz": "qux xx comment block inside a string */",
+  "hello": "world *xx* xx xx x */",
+  "x": null
+}

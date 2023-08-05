@@ -1,0 +1,45 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/marcozac/go-jsonc
+BenchmarkUnmarshal/Small/UnCommented-10         	  812524	      1514 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  888356	      1563 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  898264	      1460 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  886459	      1561 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  668392	      1576 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  894128	      1527 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  899406	      1471 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  881668	      1504 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  815108	      1492 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/UnCommented-10         	  880784	      1551 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  885700	      1649 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  871894	      1489 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  888285	      1535 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  901311	      1571 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  895260	      1667 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  612195	      1669 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  755313	      1625 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  902436	      1537 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  887456	      1544 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Small/NoCommentRunes-10      	  631338	      1635 ns/op	     656 B/op	      13 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   12020	     99117 ns/op	  179949 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   12160	     98734 ns/op	  179941 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   10000	    100086 ns/op	  179947 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   10000	    103327 ns/op	  179942 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   12085	    108439 ns/op	  179932 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   10000	    101584 ns/op	  179948 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   12170	     99311 ns/op	  179942 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   12273	     98886 ns/op	  179936 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   10000	    103464 ns/op	  179941 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/UnCommented-10        	   10000	    100132 ns/op	  179939 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12578	     97092 ns/op	  179916 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12462	     96039 ns/op	  179919 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12321	     96480 ns/op	  179923 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12397	     96735 ns/op	  179922 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12397	     95970 ns/op	  179920 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12516	     95284 ns/op	  179922 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12615	     96156 ns/op	  179919 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12620	     95339 ns/op	  179925 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12114	     99693 ns/op	  179915 B/op	    3482 allocs/op
+BenchmarkUnmarshal/Medium/NoCommentRunes-10     	   12008	     97551 ns/op	  179923 B/op	    3482 allocs/op
+PASS
+ok  	github.com/marcozac/go-jsonc	66.041s

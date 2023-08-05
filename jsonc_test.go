@@ -15,16 +15,12 @@
 package jsonc
 
 import (
-	"reflect"
-	"runtime"
-	"strings"
+	_ "embed"
 	"testing"
 
 	"github.com/marcozac/go-jsonc/internal/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	_ "embed"
 )
 
 var (
@@ -34,131 +30,22 @@ var (
 	//go:embed testdata/small_uncommented.json
 	_smallUncommented []byte
 
+	//go:embed testdata/small_no_comment_runes.json
+	_smallNoCommentRunes []byte
+
 	//go:embed testdata/medium.json
 	_medium []byte
 
 	//go:embed testdata/medium_uncommented.json
 	_mediumUncommented []byte
 
+	//go:embed testdata/medium_no_comment_runes.json
+	_mediumNoCommentRunes []byte
+
 	_invalidChar = []byte("\xa5")
 )
 
-func TestSanitize(t *testing.T) {
-	t.Parallel()
-	for _, tt := range sanitizeTestTargets {
-		tt := tt
-		name := runtime.FuncForPC(reflect.ValueOf(tt).Pointer()).Name()
-		t.Run(name[strings.LastIndex(name, ".")+9:], func(t *testing.T) {
-			t.Parallel()
-			tt(t)
-		})
-	}
-}
-
-var sanitizeTestTargets = [...]func(t *testing.T){
-	SanitizeSmall,
-	SanitizeMedium,
-}
-
-func SanitizeSmall(t *testing.T) {
-	sanitizeTest(t, _small, Small{})
-}
-
-func SanitizeMedium(t *testing.T) {
-	sanitizeTest(t, _medium, Medium{})
-}
-
-func sanitizeTest[T DataType](t *testing.T, data []byte, dt T) {
-	t.Helper()
-	for _, tt := range []struct {
-		Name string
-		Func func(t *testing.T, data []byte, dt T)
-	}{
-		{"OK", SanitizeOK[T]},
-		{"Error", SanitizeError[T]},
-	} {
-		tt := tt
-		t.Run(tt.Name, func(t *testing.T) {
-			t.Parallel()
-			tt.Func(t, data, dt)
-		})
-	}
-}
-
-func SanitizeOK[T DataType](t *testing.T, data []byte, dt T) {
-	s, err := Sanitize(data)
-	require.NoError(t, err, "sanitize failed")
-	j := dt
-	assert.NoError(t, json.Unmarshal(s, &j), "sanitized JSON is invalid")
-	fieldsValue(t, j)
-	if t.Failed() {
-		t.Logf("sanitized JSON: \n%s", s)
-	}
-}
-
-func SanitizeError[T DataType](t *testing.T, data []byte, dt T) {
-	s, err := Sanitize(append(data, _invalidChar...))
-	assert.ErrorIs(t, err, ErrInvalidUTF8, "invalid UTF-8 was not detected")
-	if t.Failed() {
-		t.Logf("sanitized JSON: \n%s", s)
-	}
-}
-
-func TestUnmarshal(t *testing.T) {
-	t.Parallel()
-	for _, tt := range unmarshalTestTargets {
-		tt := tt
-		name := runtime.FuncForPC(reflect.ValueOf(tt).Pointer()).Name()
-		t.Run(name[strings.LastIndex(name, ".")+10:], func(t *testing.T) {
-			t.Parallel()
-			tt(t)
-		})
-	}
-}
-
-var unmarshalTestTargets = [...]func(t *testing.T){
-	UnmarshalSmall,
-	UnmarshalMedium,
-}
-
-func UnmarshalSmall(t *testing.T) {
-	unmarshalTest(t, _smallUncommented, Small{})
-}
-
-func UnmarshalMedium(t *testing.T) {
-	unmarshalTest(t, _mediumUncommented, Medium{})
-}
-
-func unmarshalTest[T DataType](t *testing.T, data []byte, dt T) {
-	t.Helper()
-	for _, tt := range []struct {
-		Name string
-		Func func(t *testing.T, data []byte, dt T)
-	}{
-		{"OK", UnmarshalOK[T]},
-		{"Error", UnmarshalError[T]},
-	} {
-		tt := tt
-		t.Run(tt.Name, func(t *testing.T) {
-			t.Parallel()
-			tt.Func(t, data, dt)
-		})
-	}
-}
-
-func UnmarshalOK[T DataType](t *testing.T, data []byte, dt T) {
-	j := dt
-	assert.NoError(t, Unmarshal(data, &j), "unmarshal failed")
-	fieldsValue(t, j)
-}
-
-func UnmarshalError[T DataType](t *testing.T, data []byte, dt T) {
-	j := dt
-	assert.ErrorIs(t, Unmarshal(append(data, _invalidChar...), &j), ErrInvalidUTF8, "invalid UTF-8 was not detected")
-}
-
-func fieldsValue[T DataType](t *testing.T, j T) {
-	t.Helper()
+func FieldsValue[T DataType](t require.TestingT, j T) {
 	switch j := any(j).(type) {
 	case Small:
 		var w Small
@@ -172,14 +59,65 @@ func fieldsValue[T DataType](t *testing.T, j T) {
 		require.Equal(t, w, j, "unmarshaled JSON is invalid")
 		w.CSS.EditorSuggestInsertMode = "insert_replace" // ensure fields are checked
 		assert.NotEqual(t, w, j, "not all fields were checked")
+	case SmallNoCommentRunes:
+		var w SmallNoCommentRunes
+		require.NoError(t, json.Unmarshal(_smallNoCommentRunes, &w), "unmarshal json without comments failed")
+		assert.Equal(t, w, j, "unmarshaled JSON is invalid")
+		w.X = "x" // ensure fields are checked
+		assert.NotEqual(t, w, j, "not all fields were checked")
+	case MediumNoCommentRunes:
+		var w MediumNoCommentRunes
+		require.NoError(t, json.Unmarshal(_mediumNoCommentRunes, &w), "unmarshal json without comments failed")
+		require.Equal(t, w, j, "unmarshaled JSON is invalid")
+		w.CSS.EditorSuggestInsertMode = "insert_replace" // ensure fields are checked
+		assert.NotEqual(t, w, j, "not all fields were checked")
 	default:
-		assert.Fail(t, "unknown type %T", j)
+		assert.Fail(t, "unexpected data type: %T", j)
+	}
+}
+
+func TestHasCommentRunes(t *testing.T) {
+	t.Parallel()
+	for _, tt := range hasCommentRunesTests {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.Want, HasCommentRunes(tt.Data))
+		})
+	}
+}
+
+var hasCommentRunesTests = [...]struct {
+	Name string
+	Data []byte
+	Want bool
+}{
+	{"Small/Commented", _small, true},
+	{"Small/Uncommented", _smallUncommented, true},
+	{"Small/NoCommentRunes", _smallNoCommentRunes, false},
+	{"Medium/Commented", _medium, true},
+	{"Medium/Uncommented", _mediumUncommented, true},
+	{"Medium/NoCommentRunes", _mediumNoCommentRunes, false},
+}
+
+func BenchmarkHasCommentRunes(b *testing.B) {
+	for _, tt := range hasCommentRunesTests {
+		tt := tt
+		b.Run(tt.Name, func(b *testing.B) {
+			b.RunParallel(func(p *testing.PB) {
+				for p.Next() {
+					assert.Equal(b, tt.Want, HasCommentRunes(tt.Data))
+				}
+			})
+		})
 	}
 }
 
 type DataType interface {
-	Small | Medium
+	Small | SmallNoCommentRunes | Medium | MediumNoCommentRunes
 }
+
+type SmallNoCommentRunes Small
 
 type Small struct {
 	Foo   string `json:"foo"`
@@ -187,6 +125,8 @@ type Small struct {
 	Hello string `json:"hello"`
 	X     string `json:"x,omitempty"`
 }
+
+type MediumNoCommentRunes Medium
 
 type Medium struct {
 	TelemetryTelemetryLevel                                         string   `json:"telemetry.telemetryLevel,omitempty"`
