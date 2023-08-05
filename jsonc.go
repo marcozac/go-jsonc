@@ -114,7 +114,7 @@ func sanitize(data []byte) []byte {
 // If the data contains comment runes, it calls [Sanitize] to remove them and
 // returns [ErrInvalidUTF8] if the data is not valid UTF-8.
 //
-// Any error is reported by [json.Unmarshal] as is.
+// Any error is reported from [json.Unmarshal] as is.
 //
 // It uses the standard library for unmarshaling by default, but can be
 // configured to use the jsoniter or go-json library instead by using build
@@ -128,11 +128,7 @@ func sanitize(data []byte) []byte {
 //
 // Example:
 //
-//	data := []byte(`{
-//		// A comment
-//		"name": "John",
-//		"age": 30
-//	}`)
+//	data := []byte(`{/* comment */"name": "John", "age": 30}`)
 //	type T struct {
 //		Name string
 //		Age  int
