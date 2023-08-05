@@ -45,11 +45,11 @@ var unmarshalTestTargets = [...]func(t *testing.T){
 }
 
 func UnmarshalSmall(t *testing.T) {
-	unmarshalTest(t, _smallUncommented, Small{})
+	unmarshalTest(t, _small, Small{})
 }
 
 func UnmarshalMedium(t *testing.T) {
-	unmarshalTest(t, _mediumUncommented, Medium{})
+	unmarshalTest(t, _medium, Medium{})
 }
 
 func unmarshalTest[T DataType](t *testing.T, data []byte, dt T) {
@@ -82,15 +82,15 @@ func UnmarshalError[T DataType](t require.TestingT, data []byte, dt T) {
 
 func BenchmarkUnmarshal(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
-		benchmarkUnmarshal(b, _smallUncommented, Small{})
+		benchmarkUnmarshal(b, _small, Small{})
 	})
-	b.Run("SmallUncommented", func(b *testing.B) {
+	b.Run("SmallUncommented", func(b *testing.B) { // Check skip sanitization
 		benchmarkUnmarshal(b, _smallUncommented, Small{})
 	})
 	b.Run("Medium", func(b *testing.B) {
-		benchmarkUnmarshal(b, _mediumUncommented, Medium{})
+		benchmarkUnmarshal(b, _medium, Medium{})
 	})
-	b.Run("MediumUncommented", func(b *testing.B) {
+	b.Run("MediumUncommented", func(b *testing.B) { // Check skip sanitization
 		benchmarkUnmarshal(b, _mediumUncommented, Medium{})
 	})
 }
