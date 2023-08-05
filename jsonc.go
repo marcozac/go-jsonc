@@ -112,19 +112,21 @@ func sanitize(data []byte) []byte {
 // (or any other) library directly.
 //
 // If the data contains comment runes, it calls [Sanitize] to remove them and
-// returns [ErrInvalidUTF8] if the data is not valid UTF-8.
+// returns [ErrInvalidUTF8] if the data is not valid UTF-8. Note that if no
+// comments are found, it is assumed that the given data is valid JSON-encoded
+// and the UTF-8 validity is not checked.
 //
 // Any error is reported from [json.Unmarshal] as is.
 //
 // It uses the standard library for unmarshaling by default, but can be
-// configured to use the jsoniter or go-json library instead by using build
+// configured to use the [jsoniter] or [go-json] library instead by using build
 // tags.
 //
 //	| tag           | library                       |
 //	|---------------|-------------------------------|
 //	| none or both	| standard library              |
-//	| go_json	| "github.com/goccy/go-json"    |
 //	| jsoniter	| "github.com/json-iterator/go" |
+//	| go_json	| "github.com/goccy/go-json"    |
 //
 // Example:
 //
@@ -136,6 +138,9 @@ func sanitize(data []byte) []byte {
 //	var t T
 //	err := jsonc.Unmarshal(data, &t)
 //	...
+//
+// [jsoniter]: https://github.com/json-iterator/go
+// [go-json]: https://github.com/goccy/go-json
 func Unmarshal(data []byte, v any) error {
 	if HasCommentRunes(data) {
 		var err error
