@@ -26,7 +26,9 @@ import (
 var ErrInvalidUTF8 = errors.New("jsonc: invalid UTF-8")
 
 // Sanitize removes all comments from JSONC data.
-// It returns an error if the data is not valid UTF-8.
+// It returns [ErrInvalidUTF8] if the data is not valid UTF-8.
+//
+// NOTE: it does not checks whether the data is valid JSON or not.
 func Sanitize(data []byte) ([]byte, error) {
 	if !utf8.Valid(data) {
 		return nil, ErrInvalidUTF8
@@ -35,7 +37,7 @@ func Sanitize(data []byte) ([]byte, error) {
 }
 
 const (
-	_ byte = 1 << iota
+	_hasCommentRunes byte = 1 << iota
 	_isString
 	_isCommentLine
 	_isCommentBlock
@@ -102,29 +104,44 @@ func sanitize(data []byte) []byte {
 // Unmarshal parses the JSONC-encoded data and stores the result in the value
 // pointed by v removing all comments from the data (if any).
 //
-// It uses the standard library by default, but can be configured to use the
-// jsoniter or go-json library instead by using build tags.
+// It uses [HasCommentRunes] to check whether the data contains any comment.
+// Note that this operation is as expensive as the larger the data. On small
+// data sets it just adds a small overhead to the unmarshaling process, but
+// on large data sets it may have a significant impact on performance. In such
+// cases, it may be more efficient to call [Sanitize] and then the standard
+// (or any other) library directly.
 //
-//	| tag           | library   |
-//	|---------------|-----------|
-//	| go_json	| go-json   |
-//	| jsoniter	| jsoniter  |
-//	| none or both	| standard  |
+// If the data contains comment runes, it calls [Sanitize] to remove them and
+// returns [ErrInvalidUTF8] if the data is not valid UTF-8.
 //
-// If the data contains any '/' character, it is assumed to be not sanitized,
-// and [Sanitize] will be called before unmarshaling returning an error if the
-// data is not valid UTF-8.
+// Any error is reported by [json.Unmarshal] as is.
 //
-// To improve performance, if the data does not contain any '/' character,
-// it is assumed to be sanitized, and [Sanitize] will not be called, adding
-// just a small overhead to the unmarshaling process if the data does not
-// contain comments.
+// It uses the standard library for unmarshaling by default, but can be
+// configured to use the jsoniter or go-json library instead by using build
+// tags.
 //
-// Caveat: if the data contains a string that looks like a comment, for
-// example: {"url": "http://example.com"}, Unmarshal calls [Sanitize] anyway,
-// even if the data does not contain any comment.
+//	| tag           | library                       |
+//	|---------------|-------------------------------|
+//	| none or both	| standard library              |
+//	| go_json	| "github.com/goccy/go-json"    |
+//	| jsoniter	| "github.com/json-iterator/go" |
+//
+// Example:
+//
+//	data := []byte(`{
+//		// A comment
+//		"name": "John",
+//		"age": 30
+//	}`)
+//	type T struct {
+//		Name string
+//		Age  int
+//	}
+//	var t T
+//	err := jsonc.Unmarshal(data, &t)
+//	...
 func Unmarshal(data []byte, v any) error {
-	if bytes.ContainsRune(data, '/') {
+	if HasCommentRunes(data) {
 		var err error
 		data, err = Sanitize(data)
 		if err != nil {
@@ -132,4 +149,49 @@ func Unmarshal(data []byte, v any) error {
 		}
 	}
 	return json.Unmarshal(data, v)
+}
+
+// HasCommentRunes returns true if the data contains any comment rune.
+// It checks whether the data contains any '/' character, and if so, it looks
+// whether the previous one is a '/' or the next one is a '/' or a '*'.
+// If not, it returns false.
+//
+// Caveat: if the data contains a string that looks like a comment as
+// '{"url": "http://example.com"}', HasCommentRunes returns true.
+//
+// For example, it returns true for the following data:
+//
+//	{
+//		// comment
+//		"key": "value"
+//	}
+//
+// or
+//
+//	{
+//		/* comment
+//		"key": "value"
+//		*/
+//		"foo": "bar"
+//	}
+//
+// But also for:
+//
+//	{ "key": "value // comment" }
+func HasCommentRunes(data []byte) bool {
+	var state byte
+	bytes.IndexFunc(data, func(r rune) bool {
+		if state&_checkNext != 0 {
+			if r == '/' || r == '*' {
+				state |= _hasCommentRunes
+				return true
+			}
+			state &^= _checkNext
+		}
+		if r == '/' {
+			state |= _checkNext
+		}
+		return false
+	})
+	return state&_hasCommentRunes != 0
 }

@@ -26,16 +26,26 @@ import (
 )
 
 // This file does not contain real benchmarks, but it is used to compare the
-// performance of the Unmarshal function with the standard json.Unmarshal
-// function (or jsoniter / go-json / ...) and how fast the Unmarshal function
-// skips the sanitization of the data.
+// performances over the standard functions on uncommented JSON data.
 
+// Check standard json.Unmarshal (or jsoniter / go-json / ...) performances
+// with uncommented JSON data.
 func BenchmarkUnmarshal(b *testing.B) {
-	b.Run("SmallUncommented", func(b *testing.B) {
-		benchmarkUnmarshal(b, _smallUncommented, Small{})
+	b.Run("Small", func(b *testing.B) {
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _smallUncommented, Small{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkUnmarshal(b, _smallNoCommentRunes, SmallNoCommentRunes{})
+		})
 	})
-	b.Run("MediumUncommented", func(b *testing.B) {
-		benchmarkUnmarshal(b, _mediumUncommented, Medium{})
+	b.Run("Medium", func(b *testing.B) {
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _mediumUncommented, Medium{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkUnmarshal(b, _mediumNoCommentRunes, MediumNoCommentRunes{})
+		})
 	})
 }
 

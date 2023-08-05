@@ -16,6 +16,7 @@ package jsonc
 
 import (
 	_ "embed"
+	"testing"
 
 	"github.com/marcozac/go-jsonc/internal/json"
 	"github.com/stretchr/testify/assert"
@@ -29,11 +30,17 @@ var (
 	//go:embed testdata/small_uncommented.json
 	_smallUncommented []byte
 
+	//go:embed testdata/small_no_comment_runes.json
+	_smallNoCommentRunes []byte
+
 	//go:embed testdata/medium.json
 	_medium []byte
 
 	//go:embed testdata/medium_uncommented.json
 	_mediumUncommented []byte
+
+	//go:embed testdata/medium_no_comment_runes.json
+	_mediumNoCommentRunes []byte
 
 	_invalidChar = []byte("\xa5")
 )
@@ -52,14 +59,65 @@ func FieldsValue[T DataType](t require.TestingT, j T) {
 		require.Equal(t, w, j, "unmarshaled JSON is invalid")
 		w.CSS.EditorSuggestInsertMode = "insert_replace" // ensure fields are checked
 		assert.NotEqual(t, w, j, "not all fields were checked")
+	case SmallNoCommentRunes:
+		var w SmallNoCommentRunes
+		require.NoError(t, json.Unmarshal(_smallNoCommentRunes, &w), "unmarshal json without comments failed")
+		assert.Equal(t, w, j, "unmarshaled JSON is invalid")
+		w.X = "x" // ensure fields are checked
+		assert.NotEqual(t, w, j, "not all fields were checked")
+	case MediumNoCommentRunes:
+		var w MediumNoCommentRunes
+		require.NoError(t, json.Unmarshal(_mediumNoCommentRunes, &w), "unmarshal json without comments failed")
+		require.Equal(t, w, j, "unmarshaled JSON is invalid")
+		w.CSS.EditorSuggestInsertMode = "insert_replace" // ensure fields are checked
+		assert.NotEqual(t, w, j, "not all fields were checked")
 	default:
 		assert.Fail(t, "unexpected data type: %T", j)
 	}
 }
 
-type DataType interface {
-	Small | Medium
+func TestHasCommentRunes(t *testing.T) {
+	t.Parallel()
+	for _, tt := range hasCommentRunesTests {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.Want, HasCommentRunes(tt.Data))
+		})
+	}
 }
+
+var hasCommentRunesTests = [...]struct {
+	Name string
+	Data []byte
+	Want bool
+}{
+	{"Small/Commented", _small, true},
+	{"Small/Uncommented", _smallUncommented, true},
+	{"Small/NoCommentRunes", _smallNoCommentRunes, false},
+	{"Medium/Commented", _medium, true},
+	{"Medium/Uncommented", _mediumUncommented, true},
+	{"Medium/NoCommentRunes", _mediumNoCommentRunes, false},
+}
+
+func BenchmarkHasCommentRunes(b *testing.B) {
+	for _, tt := range hasCommentRunesTests {
+		tt := tt
+		b.Run(tt.Name, func(b *testing.B) {
+			b.RunParallel(func(p *testing.PB) {
+				for p.Next() {
+					assert.Equal(b, tt.Want, HasCommentRunes(tt.Data))
+				}
+			})
+		})
+	}
+}
+
+type DataType interface {
+	Small | SmallNoCommentRunes | Medium | MediumNoCommentRunes
+}
+
+type SmallNoCommentRunes Small
 
 type Small struct {
 	Foo   string `json:"foo"`
@@ -67,6 +125,8 @@ type Small struct {
 	Hello string `json:"hello"`
 	X     string `json:"x,omitempty"`
 }
+
+type MediumNoCommentRunes Medium
 
 type Medium struct {
 	TelemetryTelemetryLevel                                         string   `json:"telemetry.telemetryLevel,omitempty"`

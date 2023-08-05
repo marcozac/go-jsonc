@@ -85,16 +85,26 @@ func SanitizeError[T DataType](t require.TestingT, data []byte, dt T) {
 
 func BenchmarkSanitize(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
-		benchmarkSanitize(b, _small, Small{})
-	})
-	b.Run("SmallUncommented", func(b *testing.B) {
-		benchmarkSanitize(b, _smallUncommented, Small{})
+		b.Run("Commented", func(b *testing.B) {
+			benchmarkSanitize(b, _small, Small{})
+		})
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkSanitize(b, _smallUncommented, Small{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkSanitize(b, _smallNoCommentRunes, SmallNoCommentRunes{})
+		})
 	})
 	b.Run("Medium", func(b *testing.B) {
-		benchmarkSanitize(b, _medium, Medium{})
-	})
-	b.Run("MediumUncommented", func(b *testing.B) {
-		benchmarkSanitize(b, _mediumUncommented, Medium{})
+		b.Run("Commented", func(b *testing.B) {
+			benchmarkSanitize(b, _medium, Medium{})
+		})
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkSanitize(b, _mediumUncommented, Medium{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkSanitize(b, _mediumNoCommentRunes, MediumNoCommentRunes{})
+		})
 	})
 }
 

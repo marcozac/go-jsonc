@@ -24,9 +24,9 @@ for t in "${buildTags[@]}"; do
 
   echo "
 Running benchmarks with build tag: '$t'"
-  go test -bench=. -benchmem -count "$count" -tags="$t" | tee "$benchmarkDir/$f.txt"
+  go test -run='^$' -bench=. -benchmem -count "$count" -tags="$t" | tee "$benchmarkDir/$f.txt"
 
   echo "
 Running benchmarks for uncommented JSON with build tag: '$t'"
-  go test -bench=. -benchmem -count "$count" -tags="$t,uncommented_test" | tee "$benchmarkDir/$f"_uncommented.txt
+  go test -run='^$' -bench=. -benchmem -count "$count" -tags="$t,uncommented_test" | tee "$benchmarkDir/$f"_uncommented.txt
 done

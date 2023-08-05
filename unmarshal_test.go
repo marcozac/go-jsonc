@@ -82,16 +82,26 @@ func UnmarshalError[T DataType](t require.TestingT, data []byte, dt T) {
 
 func BenchmarkUnmarshal(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
-		benchmarkUnmarshal(b, _small, Small{})
-	})
-	b.Run("SmallUncommented", func(b *testing.B) { // Check skip sanitization
-		benchmarkUnmarshal(b, _smallUncommented, Small{})
+		b.Run("Commented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _small, Small{})
+		})
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _smallUncommented, Small{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkUnmarshal(b, _smallNoCommentRunes, SmallNoCommentRunes{})
+		})
 	})
 	b.Run("Medium", func(b *testing.B) {
-		benchmarkUnmarshal(b, _medium, Medium{})
-	})
-	b.Run("MediumUncommented", func(b *testing.B) { // Check skip sanitization
-		benchmarkUnmarshal(b, _mediumUncommented, Medium{})
+		b.Run("Commented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _medium, Medium{})
+		})
+		b.Run("UnCommented", func(b *testing.B) {
+			benchmarkUnmarshal(b, _mediumUncommented, Medium{})
+		})
+		b.Run("NoCommentRunes", func(b *testing.B) {
+			benchmarkUnmarshal(b, _mediumNoCommentRunes, MediumNoCommentRunes{})
+		})
 	})
 }
 
